@@ -26,11 +26,23 @@
     if (T.remainingNow(state) > 0) celebratedSeq = null;
   }
 
-  function onMessage(raw) {
+  function snapshot() {
+    if (!state) return null;
+    const rem = T.remainingNow(state);
+    return {
+      duration: state.duration, remaining: rem, running: state.running && rem > 0,
+      buddy: state.buddy, label: state.label, seq: state.seq,
+    };
+  }
+  function hello() { return { type: 'hello', state: snapshot() }; }
+
+  function onMessage(raw, reply) {
     let msg = raw;
     if (typeof raw === 'string') { try { msg = JSON.parse(raw); } catch (e) { return; } }
+    if (msg && msg.type === 'ping') { (reply || broadcast)(hello()); return; }
     apply(msg);
   }
+  function broadcast(m) { replyFns.forEach((fn) => fn(m)); }
 
   function tick() {
     const { rem, f, mode } = face.render(state);
@@ -51,11 +63,11 @@
     navigator.presentation.receiver.connectionList.then((list) => {
       const add = (conn) => {
         setStatus('📺 Connected');
-        conn.onmessage = (e) => onMessage(e.data);
         const reply = (m) => { try { conn.send(JSON.stringify(m)); } catch (e) {} };
+        conn.onmessage = (e) => onMessage(e.data, reply);
         replyFns.add(reply);
         conn.onclose = conn.onterminate = () => replyFns.delete(reply);
-        reply({ type: 'hello' });
+        reply(hello());
       };
       list.connections.forEach(add);
       list.onconnectionavailable = (e) => add(e.connection);
@@ -70,7 +82,9 @@
     s.onload = () => {
       const ctx = cast.framework.CastReceiverContext.getInstance();
       const ns = cfg.CAST_NAMESPACE || 'urn:x-cast:com.tolliver.timer';
-      ctx.addCustomMessageListener(ns, (e) => onMessage(e.data));
+      ctx.addCustomMessageListener(ns, (e) => onMessage(e.data, (m) => {
+        try { ctx.sendCustomMessage(ns, e.senderId, m); } catch (err) {}
+      }));
       replyFns.add((m) => { try { ctx.sendCustomMessage(ns, undefined, m); } catch (e) {} });
       const opts = new cast.framework.CastReceiverOptions();
       opts.disableIdleTimeout = true;
@@ -85,9 +99,10 @@
   // 3. Same-computer "Big screen" window
   if ('BroadcastChannel' in window) {
     const bc = new BroadcastChannel('tolliver-timer');
-    bc.onmessage = (e) => onMessage(e.data);
-    replyFns.add((m) => bc.postMessage(m));
-    bc.postMessage({ type: 'hello' });
+    const bcReply = (m) => bc.postMessage(m);
+    bc.onmessage = (e) => onMessage(e.data, bcReply);
+    replyFns.add(bcReply);
+    bc.postMessage(hello());
   }
 
   // Make sure sound can play if someone clicks the TV window.

@@ -4,6 +4,16 @@
   const T = window.Tolliver;
   const cfg = window.TOLLIVER_CONFIG || {};
   const NS = cfg.CAST_NAMESPACE || 'urn:x-cast:com.tolliver.timer';
+  const IS_PHONE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const IS_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // The Cast App ID can come from config.js, a ?app=XXXX link, or the "TV setup" box (saved on this phone).
+  let APP_ID = cfg.CAST_APP_ID || '';
+  try {
+    const fromUrl = new URLSearchParams(location.search).get('app');
+    if (fromUrl) localStorage.setItem('tolliver-cast-app-id', fromUrl.trim());
+    if (!APP_ID) APP_ID = localStorage.getItem('tolliver-cast-app-id') || '';
+  } catch (e) {}
   const $ = (id) => document.getElementById(id);
 
   T.rainbowTitle($('title'));
@@ -158,7 +168,33 @@
   function onScreenMessage(raw) {
     let msg = raw;
     if (typeof raw === 'string') { try { msg = JSON.parse(raw); } catch (e) { return; } }
-    if (msg && msg.type === 'hello') send();
+    if (msg && msg.type === 'hello') {
+      gotHello = true;
+      // If the TV already has a timer going (e.g. this page reloaded), take over its state
+      // instead of resetting it.
+      if (msg.state && msg.state.duration > 0) adopt(msg.state);
+      else send();
+    }
+  }
+  let gotHello = false;
+  function greet(sendFn) {
+    gotHello = false;
+    sendFn({ type: 'ping' });
+    setTimeout(() => { if (!gotHello) send(); }, 1500);
+  }
+  function adopt(s) {
+    state.duration = s.duration;
+    state.remaining = s.remaining;
+    state.running = s.running && s.remaining > 0;
+    state.endAt = state.running ? performance.now() + s.remaining : null;
+    state.buddy = s.buddy || state.buddy;
+    state.label = s.label || '';
+    state.seq = s.seq || state.seq;
+    if (s.remaining <= 0) localDoneSeq = state.seq; // don't re-celebrate
+    minutes = Math.max(1, Math.round(s.duration / 60000));
+    labelEl.value = state.label;
+    persist();
+    refreshUI();
   }
 
   const castBtn = $('castBtn');
@@ -175,7 +211,7 @@
       if (!ok) return setupPresentation();
       const ctx = cast.framework.CastContext.getInstance();
       ctx.setOptions({
-        receiverApplicationId: cfg.CAST_APP_ID,
+        receiverApplicationId: APP_ID,
         autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
       });
       let sendFn = null;
@@ -185,8 +221,8 @@
         session.addMessageListener(NS, (ns, data) => onScreenMessage(data));
         sendFn = (m) => session.sendMessage(NS, m);
         senders.add(sendFn);
-        setCastUI(true, 'Casting to ' + session.getCastDevice().friendlyName + ' 🎉');
-        send();
+        setCastUI(true, 'Casting to ' + session.getCastDevice().friendlyName + ' 🎉 Your phone is the remote.');
+        greet(sendFn);
       };
       ctx.addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, (e) => {
         const S = cast.framework.SessionState;
@@ -202,7 +238,7 @@
         if (ctx.getCurrentSession()) ctx.endCurrentSession(true);
         else ctx.requestSession().catch(() => {});
       };
-      hint.textContent = 'Tap "Cast to TV" and pick your Chromecast.';
+      hint.textContent = 'Tap "Cast to TV" and pick your Chromecast. The timer keeps going on the TV even if your phone goes to sleep.';
     };
     const s = document.createElement('script');
     s.src = 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
@@ -212,6 +248,17 @@
 
   // Option B: Chrome's Presentation API (no registration needed)
   function setupPresentation() {
+    if (IS_PHONE) {
+      // Phones can only cast to a registered Cast app.
+      castBtn.disabled = true;
+      castBtn.style.opacity = 0.5;
+      hint.innerHTML = IS_IOS
+        ? 'iPhones can\'t cast web pages to a Chromecast. Use Chrome on an Android phone or a computer.'
+        : APP_ID
+          ? 'Casting isn\'t available in this browser. Open this page in <b>Google Chrome</b> on Android.'
+          : 'To cast from your phone, add your Cast App ID in <b>⚙️ TV setup</b> below (see the README).';
+      return;
+    }
     if (!('PresentationRequest' in window)) {
       castBtn.disabled = true;
       castBtn.style.opacity = 0.5;
@@ -233,7 +280,7 @@
         sendFn = (m) => { if (conn && conn.state === 'connected') conn.send(JSON.stringify(m)); };
         senders.add(sendFn);
         setCastUI(true, 'The timer is on the TV! Keep this page open — it\'s the remote.');
-        send();
+        greet(sendFn);
       };
       c.onconnect = ready;
       if (c.state === 'connected') ready();
@@ -273,13 +320,27 @@
       if (e.data && e.data.type === 'hello') senders.add(bcSend);
       onScreenMessage(e.data);
     };
+    bc.postMessage({ type: 'ping' }); // pick up a big-screen window that's already open
   }
   $('bigBtn').onclick = () => {
     T.unlockAudio();
     window.open('tv.html', 'tolliver-tv', 'width=1280,height=720');
   };
 
-  if (cfg.CAST_APP_ID) setupCastSdk(); else setupPresentation();
+  // ---- TV setup box -------------------------------------------------------------
+  const appIdEl = $('appId');
+  appIdEl.value = APP_ID;
+  $('saveAppId').onclick = () => {
+    try {
+      const v = appIdEl.value.trim();
+      if (v) localStorage.setItem('tolliver-cast-app-id', v);
+      else localStorage.removeItem('tolliver-cast-app-id');
+    } catch (e) {}
+    location.href = location.pathname; // reload without ?app=
+  };
+  if (!APP_ID) $('setup').open = IS_PHONE && !IS_IOS;
+
+  if (APP_ID) setupCastSdk(); else setupPresentation();
 
   refreshUI();
   requestAnimationFrame(tick);

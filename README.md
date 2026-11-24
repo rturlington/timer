@@ -8,38 +8,60 @@ A big, bright, kid-friendly countdown timer you can cast to your TV with a Chrom
 - Cheery messages along the way, and confetti + a "ta-da!" fanfare when time's up
 - Your phone/laptop is the remote: Go, Pause, Reset, change things while casting
 
-## Running it
+## Using it from an Android phone
 
-It's a plain static website with no build step. Serve the folder from anywhere:
+A phone can't cast an ordinary web page, so the TV screen (`tv.html`) is registered
+with Google as a Cast "receiver app". You only do this once.
+
+### 1. Put it on the web (free, GitHub Pages)
+
+1. On GitHub, open **rturlington/timer → Settings → General → Danger Zone →
+   Change visibility → Public** (your Chromecast must be able to load the page
+   without logging in).
+2. **Settings → Pages → Build and deployment**: Source **Deploy from a branch**, branch
+   **`ccr-afc3f703-8j0dge`** (or `main` once merged), folder **/ (root)** → **Save**.
+3. After a minute it's live at **https://rturlington.github.io/timer/**.
+   Check that **https://rturlington.github.io/timer/tv.html** shows the timer.
+
+### 2. Register the TV screen with Google ($5 one time)
+
+1. Go to the [Google Cast SDK Developer Console](https://cast.google.com/publish),
+   sign in and pay the one-time $5 registration fee.
+2. **Add New Application → Custom Receiver**.
+   - Name: `Tolliver's Timer`
+   - Receiver Application URL: `https://rturlington.github.io/timer/tv.html`
+3. Save. Copy the **Application ID** (8 characters, like `A1B2C3D4`).
+4. Make it usable on your Chromecast — either:
+   - click **Publish** on the app (easiest; anyone who knows the ID could launch it,
+     which is harmless), **or**
+   - under **Cast Receiver Devices → Add New Device**, enter your Chromecast's serial
+     number, then reboot the Chromecast. This can take ~15 minutes to kick in.
+
+### 3. On your phone
+
+1. Open **https://rturlington.github.io/timer/** in **Chrome** on your Android phone
+   (same Wi-Fi as the Chromecast).
+2. Open **⚙️ TV setup**, paste the Application ID, tap **Save**.
+   (Or open `https://rturlington.github.io/timer/?app=YOURID` once — same thing.)
+3. Tap **📡 Cast to TV**, pick your Chromecast, then **▶️ Go!**
+4. Tip: Chrome ⋮ menu → **Add to Home screen** gives you a Tolliver's Timer app icon.
+
+The timer runs on the Chromecast itself, so your phone can go to sleep. If you reopen
+the page later it reconnects and picks up the running timer.
+
+> iPhone: Apple's browsers can't cast to a Chromecast, so this needs an Android phone
+> (or Chrome on a computer).
+
+## Using it from a computer (no setup needed)
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then open **http://localhost:8000** in **Google Chrome** on a computer that's on the
-same Wi-Fi as your Chromecast. (GitHub Pages or any HTTPS host works too.)
-
-## Casting to the TV
-
-1. Pick a time and a buddy.
-2. Press **📡 Cast to TV** and choose your Chromecast.
-3. The TV shows the big timer; the page you're on becomes the remote. Press **▶️ Go!**
-
-This uses Chrome's built-in Presentation API, so there's nothing to register. Keep the
-remote tab open while the timer runs (Chrome renders the TV screen and streams it).
-
-**Fallback:** press **🖥️ Open big-screen window**, then use Chrome's ⋮ menu → **Cast…** →
-*Cast tab* on that window. It stays in sync with the remote automatically.
-
-### Optional: native Chromecast receiver
-
-If you want the Chromecast to run the timer itself (so your laptop can sleep, and phones
-can cast from Chrome on Android), register a Custom Web Receiver:
-
-1. Host this folder on HTTPS (e.g. GitHub Pages).
-2. Go to the [Google Cast SDK Developer Console](https://cast.google.com/publish)
-   ($5 one-time fee), add a **Custom Receiver** with the URL of your hosted `tv.html`.
-3. Put the Application ID in `js/config.js` as `CAST_APP_ID`.
+Open **http://localhost:8000** in **Chrome**, press **📡 Cast to TV**, pick the
+Chromecast. Without an App ID this uses Chrome's built-in Presentation API — keep the tab
+open while the timer runs. Fallback: **🖥️ Open big-screen window**, then Chrome ⋮ →
+**Cast…** → *Cast tab*.
 
 ## Files
 
@@ -48,5 +70,6 @@ can cast from Chrome on Android), register a Custom Web Receiver:
 | `index.html`, `js/controller.js` | The remote control |
 | `tv.html`, `js/receiver.js` | The big TV screen |
 | `js/face.js` | The timer face, sounds, confetti (shared) |
-| `js/config.js` | Optional Cast app id |
+| `js/config.js` | Optional built-in Cast App ID (or set it on the phone) |
+| `manifest.webmanifest`, `icons/` | Add-to-home-screen app icon |
 | `css/style.css` | Sky, clouds, grass and bouncy letters |

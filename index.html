@@ -4,6 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tolliver's Timer</title>
+  <meta name="theme-color" content="#7fd3ff">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
@@ -65,6 +69,11 @@
       border-radius: 18px; border: 3px solid #d7ecff; color: var(--ink); text-align: center;
     }
     input.label:focus { outline: none; border-color: var(--blue); }
+    details summary { cursor: pointer; text-align: center; font-weight: 600; padding: 6px; }
+    details .hint { margin: 8px 0; }
+    .appid-row { display: flex; gap: 8px; }
+    .appid-row input { flex: 1; min-width: 0; }
+    #saveAppId { background: var(--yellow); padding: 0 18px; font-size: 1.1rem; }
   </style>
 </head>
 <body>
@@ -110,6 +119,14 @@
       <button id="castBtn">📡 Cast to TV</button>
       <button id="bigBtn">🖥️ Open big-screen window</button>
       <p class="hint" id="castHint"></p>
+      <details id="setup">
+        <summary>⚙️ TV setup</summary>
+        <p class="hint">Paste the <b>Application ID</b> from the Google Cast Developer Console. It's saved on this device.</p>
+        <div class="appid-row">
+          <input class="label" id="appId" placeholder="e.g. A1B2C3D4" autocapitalize="characters" autocomplete="off" spellcheck="false">
+          <button id="saveAppId">Save</button>
+        </div>
+      </details>
     </section>
   </main>
 
