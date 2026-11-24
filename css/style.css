@@ -1,0 +1,163 @@
+:root {
+  --sky-top: #7fd3ff;
+  --sky-bottom: #c9f1ff;
+  --grass: #7ed957;
+  --ink: #2d2a5a;
+  --card: #ffffff;
+  --red: #ff5c7a;
+  --orange: #ff9f43;
+  --yellow: #ffd93d;
+  --green: #4cd964;
+  --blue: #3fa7ff;
+  --purple: #a66cff;
+  --shadow: 0 8px 0 rgba(45, 42, 90, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: 'Fredoka', 'Comic Sans MS', 'Chalkboard SE', system-ui, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+  background-color: var(--sky-top);
+  overflow-x: hidden;
+}
+
+/* ---------- Floating clouds & grass ---------- */
+.sky {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.cloud {
+  position: absolute;
+  width: 180px;
+  height: 60px;
+  background: #fff;
+  border-radius: 60px;
+  opacity: 0.9;
+  animation: drift linear infinite;
+}
+.cloud::before, .cloud::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+}
+.cloud::before { width: 80px; height: 80px; top: -40px; left: 25px; }
+.cloud::after  { width: 100px; height: 100px; top: -55px; left: 70px; }
+.cloud.c1 { top: 10%; animation-duration: 70s; animation-delay: -10s; }
+.cloud.c2 { top: 30%; transform: scale(0.7); animation-duration: 95s; animation-delay: -50s; }
+.cloud.c3 { top: 55%; transform: scale(0.5); animation-duration: 120s; animation-delay: -80s; }
+@keyframes drift {
+  from { left: -250px; }
+  to   { left: 110%; }
+}
+.grass {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 9vh;
+  background:
+    radial-gradient(circle at 10% 0, var(--grass) 30px, transparent 31px),
+    var(--grass);
+  border-top-left-radius: 50% 40px;
+  border-top-right-radius: 50% 40px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---------- Title ---------- */
+.title {
+  font-weight: 700;
+  text-align: center;
+  margin: 0;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  text-shadow: 0 4px 0 rgba(45, 42, 90, 0.2);
+}
+.title span {
+  display: inline-block;
+  animation: bounce 2.4s ease-in-out infinite;
+  -webkit-text-stroke: 2px #fff;
+  paint-order: stroke fill;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-8px) rotate(2deg); }
+}
+
+/* ---------- Timer face (shared) ---------- */
+.face {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+.face svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.face .center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.face .buddy {
+  font-size: 22cqw;
+  line-height: 1;
+  filter: drop-shadow(0 6px 0 rgba(45, 42, 90, 0.2));
+  animation: wiggle 1.6s ease-in-out infinite;
+}
+.face.paused .buddy, .face.idle .buddy { animation: none; }
+.face.done .buddy { animation: jump 0.6s ease-in-out infinite; }
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-6deg); }
+  50%      { transform: rotate(6deg); }
+}
+@keyframes jump {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-14%) scale(1.1); }
+}
+.face-wrap { container-type: inline-size; }
+
+.digits {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  line-height: 1;
+  background: var(--card);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  padding: 0.12em 0.6em;
+  display: inline-block;
+}
+.message {
+  text-align: center;
+  font-weight: 600;
+  min-height: 1.3em;
+}
+
+/* ---------- Confetti ---------- */
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+.confetti i {
+  position: absolute;
+  top: -10vh;
+  font-style: normal;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(120vh) rotate(720deg); }
+}

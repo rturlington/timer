@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tolliver's Timer — TV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { height: 100vh; overflow: hidden; }
+    main {
+      position: relative; z-index: 1;
+      height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2vh; padding: 3vh 4vw 10vh;
+    }
+    .title { font-size: 8vh; }
+    .face-wrap { width: min(58vh, 80vw); }
+    .digits { font-size: 11vh; }
+    .message { font-size: 4.5vh; }
+    .status {
+      position: fixed; right: 2vw; bottom: 1.5vh; z-index: 2;
+      font-size: 2vh; opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="sky"><div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div></div>
+  <div class="grass"></div>
+  <main>
+    <h1 class="title" id="title">Tolliver's Timer</h1>
+    <div class="face-wrap" id="face"></div>
+    <div class="digits" id="digits">0:00</div>
+    <div class="message" id="message">Waiting for the remote… 📱</div>
+  </main>
+  <div class="status" id="status"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/face.js"></script>
+  <script src="js/receiver.js"></script>
+</body>
+</html>
