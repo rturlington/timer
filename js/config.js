@@ -8,6 +8,6 @@
 // paste its Application ID here to use the native Google Cast SDK instead
 // (lets the Chromecast run the timer on its own, even if your laptop sleeps).
 window.TOLLIVER_CONFIG = {
-  CAST_APP_ID: '',
+  CAST_APP_ID: '2F2D05DB',
   CAST_NAMESPACE: 'urn:x-cast:com.tolliver.timer',
 };

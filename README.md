@@ -41,8 +41,7 @@ with Google as a Cast "receiver app". You only do this once.
 
 1. Open **https://rturlington.github.io/timer/** in **Chrome** on your Android phone
    (same Wi-Fi as the Chromecast).
-2. Open **⚙️ TV setup**, paste the Application ID, tap **Save**.
-   (Or open `https://rturlington.github.io/timer/?app=YOURID` once — same thing.)
+2. The App ID (`2F2D05DB`) is already built into `js/config.js`, so there's nothing to paste.
 3. Tap **📡 Cast to TV**, pick your Chromecast, then **▶️ Go!**
 4. Tip: Chrome ⋮ menu → **Add to Home screen** gives you a Tolliver's Timer app icon.
 
